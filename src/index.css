@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@theme {
+  --color-marfim: #FFF9F0;
+  --color-creme: #F6EBDD;
+  --color-creme-claro: #FFF9F0;
+  --color-pergaminho: #EFE2CF;
+  --color-girassol: #E9B94E;
+  --color-terracota: #A65A43;
+  --color-terracota-escuro: #873F2C;
+  --color-salvia: #68734B;
+  --color-salvia-suave: #8D9A75;
+  --color-oliva: #68734B;
+  --color-dourado: #C6A46A;
+  --color-marrom: #49352B;
+  --color-marrom-suave: #6F584B;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Great Vibes", "Pinyon Script", cursive;
+  --font-delicate: "Allura", "Great Vibes", cursive;
+  --font-sans: "Lora", Georgia, serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: #FFF9F0;
+    color: #49352B;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: #FFF9F0;
+    color: #49352B;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid #873F2C;
+    outline-offset: 2px;
+  }
+}
+
+/* Luminous handmade ivory cotton paper with soft watercolor washes */
+.paper-texture,
+.watercolor-paper {
+  background-color: #FFF9F0;
+  background-image:
+    radial-gradient(at 8% 12%, rgba(233, 185, 78, 0.11) 0px, transparent 42%),
+    radial-gradient(at 92% 16%, rgba(141, 154, 117, 0.1) 0px, transparent 38%),
+    radial-gradient(at 86% 84%, rgba(166, 90, 67, 0.08) 0px, transparent 46%),
+    radial-gradient(at 15% 88%, rgba(246, 235, 221, 0.72) 0px, transparent 52%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+}
+
+/* Soft cream & watercolor wash band for alternating sections (translucent so z-10 petals remain visible) */
+.watercolor-cream-band {
+  background-color: rgba(246, 235, 221, 0.52);
+  background-image:
+    radial-gradient(at 18% 22%, rgba(255, 249, 240, 0.55) 0px, transparent 48%),
+    radial-gradient(at 82% 78%, rgba(233, 185, 78, 0.14) 0px, transparent 44%),
+    radial-gradient(at 85% 15%, rgba(166, 90, 67, 0.08) 0px, transparent 42%);
+}
+
+/* Deep warm terracotta surface (preserved for compact accent strips if needed) */
+.terracotta-surface {
+  background-color: #873F2C;
+  background-image:
+    linear-gradient(125deg, rgba(246, 235, 221, 0.1) 0%, transparent 40%, rgba(73, 53, 43, 0.25) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* Light airy watercolor ivory card with delicate antique gold border */
+.invitation-panel {
+  background-color: rgba(255, 249, 240, 0.84);
+  background-image:
+    radial-gradient(at 50% 0%, rgba(255, 253, 248, 0.78) 0%, rgba(255, 249, 240, 0.82) 60%, rgba(246, 235, 221, 0.78) 100%);
+  border: 1.5px solid rgba(198, 164, 106, 0.72);
+  box-shadow:
+    0 20px 50px -18px rgba(111, 88, 75, 0.18),
+    0 4px 16px -6px rgba(198, 164, 106, 0.18),
+    inset 0 0 0 5px rgba(255, 249, 240, 0.85),
+    inset 0 0 0 6px rgba(198, 164, 106, 0.36);
+}
+
+.ornamental-frame {
+  border: 1px solid rgba(198, 164, 106, 0.62);
+  box-shadow:
+    0 12px 32px -14px rgba(111, 88, 75, 0.15),
+    inset 0 0 0 4px rgba(255, 249, 240, 0.85),
+    inset 0 0 0 5px rgba(198, 164, 106, 0.3);
+}
+
+.tabular-nums {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+/* Isolated neutral financial surface exclusively for credit card payment fields */
+.financial-checkout-zone {
+  font-family: "Inter", "Roboto", Arial, Helvetica, sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: #0F172A;
+}
+
+.financial-checkout-zone h2,
+.financial-checkout-zone h3,
+.financial-checkout-zone h4,
+.financial-checkout-zone label,
+.financial-checkout-zone input,
+.financial-checkout-zone select,
+.financial-checkout-zone button {
+  font-family: "Inter", "Roboto", Arial, Helvetica, sans-serif;
+}
+
+.financial-checkout-zone :focus-visible {
+  outline: 2px solid #0F172A;
+  outline-offset: 2px;
+}
+
+/* 3D Flip Clock animations */
+.flip-perspective {
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+@keyframes flipTopHalf {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flipBottomHalf {
+  0% {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-flip-top {
+  transform-origin: 50% 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: flipTopHalf 0.22s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+}
+
+.animate-flip-bottom {
+  transform-origin: 50% 0%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: flipBottomHalf 0.24s 0.2s cubic-bezier(0.2, 0.85, 0.35, 1) both;
+}
+
+/* Gentle botanical sway */
+@keyframes botanicalSway {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(0.6deg);
+  }
+}
+
+.animate-botanical-sway {
+  animation: botanicalSway 7s ease-in-out infinite;
+}
+
+/* Gentle animated gift box for Pix contribution banner */
+@keyframes giftBoxFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-4px) rotate(-5deg);
+  }
+  45% {
+    transform: translateY(-1px) rotate(0deg);
+  }
+  68% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+  88% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes giftBoxHoverWobble {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-8deg) scale(1.04);
+  }
+  55% {
+    transform: translateY(-6px) rotate(7deg) scale(1.05);
+  }
+  80% {
+    transform: translateY(-2px) rotate(-3deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+}
+
+.animate-gift-box {
+  transform-origin: 50% 78%;
+  animation: giftBoxFloat 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .animate-gift-box:hover {
+    animation: giftBoxHoverWobble 0.65s ease-in-out 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-gift-box {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

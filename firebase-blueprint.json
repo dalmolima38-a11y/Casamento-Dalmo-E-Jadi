@@ -1,0 +1,368 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized couple/administrator account allowed to manage the wedding site.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["couple", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Publicly configurable wedding settings, Pix details, deadlines, and editorial copy.",
+      "type": "object",
+      "properties": {
+        "coupleNames": { "type": "string", "maxLength": 100 },
+        "weddingDateIso": { "type": "string", "maxLength": 40 },
+        "weddingDateDisplay": { "type": "string", "maxLength": 100 },
+        "weddingTimeDisplay": { "type": "string", "maxLength": 40 },
+        "venueName": { "type": "string", "maxLength": 200 },
+        "venueCity": { "type": "string", "maxLength": 120 },
+        "venueCep": { "type": "string", "maxLength": 20 },
+        "venueStreetAddress": { "type": "string", "maxLength": 240 },
+        "venueCoordinates": { "type": "string", "maxLength": 80 },
+        "venueMapUrl": { "type": "string", "maxLength": 500 },
+        "venuePhotoUrl": { "type": "string", "maxLength": 600 },
+        "ceremonyPastor": { "type": "string", "maxLength": 120 },
+        "ceremonyPlanner": { "type": "string", "maxLength": 120 },
+        "dressCodeImageUrl": { "type": "string", "maxLength": 600 },
+        "dressCodeColors": { "type": "array" },
+        "dressCodeMessage": { "type": "string", "maxLength": 600 },
+        "guestGuidelines": { "type": "array" },
+        "padrinhos": { "type": "array" },
+        "publicShareUrl": { "type": "string", "maxLength": 200 },
+        "heroQuote": { "type": "string", "maxLength": 400 },
+        "storyIntro": { "type": "string", "maxLength": 1500 },
+        "giftIntroMessage": { "type": "string", "maxLength": 500 },
+        "rsvpDeadlineIso": { "type": "string", "maxLength": 40 },
+        "rsvpMaxGuestsPerSubmission": { "type": "integer" },
+        "giftReservationExpiryMinutes": { "type": "integer" },
+        "pixEnabled": { "type": "boolean" },
+        "pixKey": { "type": "string", "maxLength": 140 },
+        "pixKeyType": { "type": "string", "enum": ["cpf", "cnpj", "email", "phone", "evp", "unconfigured"] },
+        "pixBeneficiaryName": { "type": "string", "maxLength": 80 },
+        "pixInstitution": { "type": "string", "maxLength": 80 },
+        "pixCity": { "type": "string", "maxLength": 40 },
+        "pixProviderMode": { "type": "string", "enum": ["demo_unconfigured", "manual_pix", "webhook_provider"] },
+        "goalAmountCents": { "type": "integer" },
+        "goalTitle": { "type": "string", "maxLength": 140 },
+        "lgpdContactEmail": { "type": "string", "maxLength": 160 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "coupleNames",
+        "weddingDateIso",
+        "venueName",
+        "venueCity",
+        "heroQuote",
+        "giftIntroMessage",
+        "rsvpMaxGuestsPerSubmission",
+        "giftReservationExpiryMinutes",
+        "pixEnabled",
+        "pixProviderMode",
+        "updatedAt"
+      ]
+    },
+    "TimelineEvent": {
+      "title": "TimelineEvent",
+      "description": "Editable milestone in the couple's story.",
+      "type": "object",
+      "properties": {
+        "dateLabel": { "type": "string", "maxLength": 60 },
+        "subtitle": { "type": "string", "maxLength": 160 },
+        "title": { "type": "string", "maxLength": 140 },
+        "description": { "type": "string", "maxLength": 2500 },
+        "imageUrl": { "type": "string", "maxLength": 600 },
+        "galleryUrls": { "type": "array" },
+        "order": { "type": "integer" },
+        "isDemoExample": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["dateLabel", "title", "description", "order", "isDemoExample", "createdAt", "updatedAt"]
+    },
+    "GiftItem": {
+      "title": "GiftItem",
+      "description": "Gift catalog item (full gift, quota/share, or symbolic contribution).",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 140 },
+        "description": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "enum": ["Cozinha & Mesa", "Cama, Mesa & Banho", "Eletrodomésticos", "Decoração & Conforto", "Momentos a dois", "Lua de mel", "Contribuições especiais", "Nossa casa"] },
+        "priceCents": { "type": "integer" },
+        "imageUrl": { "type": "string", "maxLength": 600 },
+        "giftType": { "type": "string", "enum": ["full", "quota", "symbolic"] },
+        "totalQuotas": { "type": "integer" },
+        "reservedQuotas": { "type": "integer" },
+        "paidQuotas": { "type": "integer" },
+        "desiredUnits": { "type": "integer" },
+        "quotasPerUnit": { "type": "integer" },
+        "sortOrder": { "type": "integer" },
+        "active": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "isDemoExample": { "type": "boolean" },
+        "needsPhotoReview": { "type": "boolean" },
+        "photoSource": { "type": "string", "maxLength": 160 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "priceCents",
+        "giftType",
+        "totalQuotas",
+        "reservedQuotas",
+        "paidQuotas",
+        "active",
+        "featured",
+        "isDemoExample",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GiftOrder": {
+      "title": "GiftOrder",
+      "description": "Private gift reservation, Pix, or Mercado Pago Checkout Pro payment order (never public).",
+      "type": "object",
+      "properties": {
+        "giftId": { "type": "string", "maxLength": 128 },
+        "giftTitle": { "type": "string", "maxLength": 160 },
+        "itemsSnapshot": { "type": "array" },
+        "isCustomAmount": { "type": "boolean" },
+        "quotas": { "type": "integer" },
+        "amountCents": { "type": "integer" },
+        "giverName": { "type": "string", "maxLength": 120 },
+        "giverContact": { "type": "string", "maxLength": 140 },
+        "messageToCouple": { "type": "string", "maxLength": 800 },
+        "status": { "type": "string", "enum": ["reserved", "awaiting_confirmation", "confirmed", "expired", "cancelled"] },
+        "paymentMethod": { "type": "string", "enum": ["pix_manual", "pix_webhook", "mercadopago_card", "demo_preview"] },
+        "orderTokenHash": { "type": "string", "minLength": 32, "maxLength": 128 },
+        "idempotencyKey": { "type": "string", "maxLength": 128 },
+        "mpOrderId": { "type": "string", "maxLength": 128 },
+        "mpPaymentId": { "type": "string", "maxLength": 128 },
+        "mpTransactionStatus": { "type": "string", "maxLength": 60 },
+        "mpStatusDetail": { "type": "string", "maxLength": 80 },
+        "mpPaymentType": { "type": "string", "maxLength": 60 },
+        "mpCheckoutUrl": { "type": "string", "maxLength": 600 },
+        "receiptProofHash": { "type": "string", "minLength": 32, "maxLength": 128 },
+        "receiptNote": { "type": "string", "maxLength": 300 },
+        "receiptPath": { "type": "string", "maxLength": 500 },
+        "lgpdConsent": { "type": "boolean" },
+        "expiresAtIso": { "type": "string", "maxLength": 40 },
+        "confirmedAtIso": { "type": "string", "maxLength": 40 },
+        "adminArchived": { "type": "boolean" },
+        "adminArchivedAtIso": { "type": "string", "maxLength": 40 },
+        "adminArchivedBy": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "giftTitle",
+        "isCustomAmount",
+        "quotas",
+        "amountCents",
+        "giverName",
+        "giverContact",
+        "status",
+        "paymentMethod",
+        "orderTokenHash",
+        "lgpdConsent",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RsvpRecord": {
+      "title": "RsvpRecord",
+      "description": "Private guest RSVP submission with administrative review and edit token hash.",
+      "type": "object",
+      "properties": {
+        "responsibleName": { "type": "string", "maxLength": 120 },
+        "contact": { "type": "string", "maxLength": 140 },
+        "attending": { "type": "boolean" },
+        "attendeesCount": { "type": "integer" },
+        "attendeeNames": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 600 },
+        "status": { "type": "string", "enum": ["pending_review", "approved", "declined", "needs_adjustment"] },
+        "editTokenHash": { "type": "string", "minLength": 32, "maxLength": 128 },
+        "lgpdConsent": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "responsibleName",
+        "contact",
+        "attending",
+        "attendeesCount",
+        "attendeeNames",
+        "status",
+        "editTokenHash",
+        "lgpdConsent",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RsvpRevision": {
+      "title": "RsvpRevision",
+      "description": "Authenticated correction request submitted by the holder of an RSVP edit token.",
+      "type": "object",
+      "properties": {
+        "rsvpId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "tokenHash": { "type": "string", "minLength": 32, "maxLength": 128 },
+        "attending": { "type": "boolean" },
+        "attendeesCount": { "type": "integer" },
+        "attendeeNames": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 600 },
+        "reviewStatus": { "type": "string", "enum": ["pending", "applied", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["rsvpId", "tokenHash", "attending", "attendeesCount", "attendeeNames", "reviewStatus", "createdAt"]
+    },
+    "GuestbookMessage": {
+      "title": "GuestbookMessage",
+      "description": "Guestbook wishes moderated before public display.",
+      "type": "object",
+      "properties": {
+        "authorName": { "type": "string", "maxLength": 100 },
+        "relationship": { "type": "string", "maxLength": 80 },
+        "message": { "type": "string", "maxLength": 800 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "consentToPublish": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorName", "message", "status", "consentToPublish", "createdAt", "updatedAt"]
+    },
+    "GalleryAlbum": {
+      "title": "GalleryAlbum",
+      "description": "Photo album grouping couple portraits and collaborative guest photos.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 400 },
+        "allowGuestUploads": { "type": "boolean" },
+        "order": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "allowGuestUploads", "order", "createdAt"]
+    },
+    "GalleryPhoto": {
+      "title": "GalleryPhoto",
+      "description": "Photo entry in a wedding album, subject to moderation for guest uploads.",
+      "type": "object",
+      "properties": {
+        "albumId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "imageUrl": { "type": "string", "maxLength": 600 },
+        "caption": { "type": "string", "maxLength": 240 },
+        "uploadedBy": { "type": "string", "maxLength": 100 },
+        "sizeBytes": { "type": "integer" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "consentToPublish": { "type": "boolean" },
+        "isPlaceholder": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["albumId", "imageUrl", "uploadedBy", "sizeBytes", "status", "consentToPublish", "createdAt"]
+    },
+    "CoverflowPhoto": {
+      "title": "CoverflowPhoto",
+      "description": "Curated photo stored permanently in project media for the Home 3D Coverflow gallery card.",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string", "maxLength": 600 },
+        "caption": { "type": "string", "maxLength": 200 },
+        "order": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["imageUrl", "order", "createdAt", "updatedAt"]
+    },
+    "FaqItem": {
+      "title": "FaqItem",
+      "description": "Editable frequently asked question for wedding guests.",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string", "enum": ["RSVP", "Presentes", "Horários", "Crianças", "Cerimônia", "Geral"] },
+        "question": { "type": "string", "maxLength": 240 },
+        "answer": { "type": "string", "maxLength": 1200 },
+        "order": { "type": "integer" },
+        "isDemoExample": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "question", "answer", "order", "isDemoExample", "updatedAt"]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Audit log of administrative actions.",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 200 },
+        "action": { "type": "string", "maxLength": 120 },
+        "details": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "action", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized admin accounts."
+    },
+    "/site_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Global wedding configuration document."
+    },
+    "/timeline_events/{eventId}": {
+      "schema": { "$ref": "#/entities/TimelineEvent" },
+      "description": "Our Story timeline milestones."
+    },
+    "/gifts/{giftId}": {
+      "schema": { "$ref": "#/entities/GiftItem" },
+      "description": "Wedding gift registry items."
+    },
+    "/gift_orders/{orderId}": {
+      "schema": { "$ref": "#/entities/GiftOrder" },
+      "description": "Private gift reservations and Pix payment statuses."
+    },
+    "/rsvps/{rsvpId}": {
+      "schema": { "$ref": "#/entities/RsvpRecord" },
+      "description": "Private guest RSVP submissions."
+    },
+    "/rsvp_revisions/{revisionId}": {
+      "schema": { "$ref": "#/entities/RsvpRevision" },
+      "description": "Token-verified guest RSVP revision requests."
+    },
+    "/guestbook_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/GuestbookMessage" },
+      "description": "Guestbook wishes moderated by admins."
+    },
+    "/gallery_albums/{albumId}": {
+      "schema": { "$ref": "#/entities/GalleryAlbum" },
+      "description": "Photo gallery albums."
+    },
+    "/gallery_photos/{photoId}": {
+      "schema": { "$ref": "#/entities/GalleryPhoto" },
+      "description": "Photos inside wedding gallery albums."
+    },
+    "/coverflow_photos/{photoId}": {
+      "schema": { "$ref": "#/entities/CoverflowPhoto" },
+      "description": "Ordered permanent media photos shown in the Home 3D Coverflow gallery card."
+    },
+    "/faqs/{faqId}": {
+      "schema": { "$ref": "#/entities/FaqItem" },
+      "description": "Editable FAQ entries."
+    },
+    "/admin_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminLog" },
+      "description": "Administrative action audit logs."
+    }
+  }
+}

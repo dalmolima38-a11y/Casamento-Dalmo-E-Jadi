@@ -1,0 +1,6 @@
+{
+  "name": "Nosso Para Sempre | Dalmo & Jadi",
+  "description": "Site oficial do casamento de Dalmo & Jadi — 10 de janeiro de 2027, às 15h00, em Rio Pardo de Minas - MG. Confirmação de presença, nossa história, lista de presentes via Pix, mural de recados, galeria e informações da cerimônia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

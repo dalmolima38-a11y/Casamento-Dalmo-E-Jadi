@@ -1,0 +1,579 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        ('email' in request.auth.token &&
+          request.auth.token.email is string &&
+          request.auth.token.email.lower() in ['dalmofilho38@gmail.com', 'dalmolima38@gmail.com']) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    // --- Validation Blueprints ---
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'createdAt'])
+        && isValidId(data.uid)
+        && isValidString(data.email, 3, 200)
+        && isValidOptionalString(data, 'displayName', 120)
+        && data.role in ['couple', 'admin']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll([
+          'coupleNames', 'weddingDateIso', 'venueName', 'venueCity',
+          'heroQuote', 'giftIntroMessage', 'rsvpMaxGuestsPerSubmission',
+          'giftReservationExpiryMinutes', 'pixEnabled', 'pixProviderMode', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'coupleNames', 'weddingDateIso', 'weddingDateDisplay', 'weddingTimeDisplay',
+          'venueName', 'venueCity', 'venueCep', 'venueStreetAddress', 'venueCoordinates', 'venueMapUrl',
+          'venuePhotoUrl', 'ceremonyPastor', 'ceremonyPlanner', 'dressCodeImageUrl',
+          'dressCodeColors', 'dressCodeMessage', 'guestGuidelines', 'padrinhos',
+          'publicShareUrl', 'heroQuote', 'storyIntro', 'giftIntroMessage',
+          'rsvpDeadlineIso', 'rsvpMaxGuestsPerSubmission', 'giftReservationExpiryMinutes',
+          'pixEnabled', 'pixKey', 'pixKeyType', 'pixBeneficiaryName', 'pixInstitution', 'pixCity',
+          'pixProviderMode', 'goalAmountCents', 'goalTitle', 'lgpdContactEmail', 'updatedAt'
+        ])
+        && isValidString(data.coupleNames, 2, 100)
+        && isValidString(data.weddingDateIso, 4, 40)
+        && isValidOptionalString(data, 'weddingDateDisplay', 100)
+        && isValidOptionalString(data, 'weddingTimeDisplay', 40)
+        && isValidString(data.venueName, 2, 200)
+        && isValidString(data.venueCity, 2, 120)
+        && isValidOptionalString(data, 'venueCep', 20)
+        && isValidOptionalString(data, 'venueStreetAddress', 240)
+        && isValidOptionalString(data, 'venueCoordinates', 80)
+        && isValidOptionalString(data, 'venueMapUrl', 500)
+        && isValidOptionalString(data, 'venuePhotoUrl', 600)
+        && isValidOptionalString(data, 'ceremonyPastor', 120)
+        && isValidOptionalString(data, 'ceremonyPlanner', 120)
+        && isValidOptionalString(data, 'dressCodeImageUrl', 600)
+        && (!('dressCodeColors' in data) || (
+          data.dressCodeColors is list &&
+          data.dressCodeColors.size() <= 16 &&
+          (data.dressCodeColors.size() == 0 || (
+            data.dressCodeColors[0] is map &&
+            data.dressCodeColors[0].keys().hasOnly(['id', 'name', 'hex']) &&
+            isValidString(data.dressCodeColors[0].id, 1, 80) &&
+            isValidString(data.dressCodeColors[0].name, 0, 60) &&
+            isValidString(data.dressCodeColors[0].hex, 4, 20)
+          ))
+        ))
+        && isValidOptionalString(data, 'dressCodeMessage', 600)
+        && (!('guestGuidelines' in data) || (
+          data.guestGuidelines is list &&
+          data.guestGuidelines.size() <= 10 &&
+          (data.guestGuidelines.size() == 0 || (
+            data.guestGuidelines[0] is map &&
+            data.guestGuidelines[0].keys().hasOnly(['id', 'title', 'description', 'icon']) &&
+            isValidString(data.guestGuidelines[0].id, 1, 80) &&
+            isValidString(data.guestGuidelines[0].title, 1, 80) &&
+            isValidString(data.guestGuidelines[0].description, 1, 400) &&
+            data.guestGuidelines[0].icon in ['clock', 'smartphone', 'camera', 'heart', 'sparkles']
+          ))
+        ))
+        && (!('padrinhos' in data) || (
+          data.padrinhos is list &&
+          data.padrinhos.size() <= 30 &&
+          (data.padrinhos.size() == 0 || (
+            data.padrinhos[0] is map &&
+            data.padrinhos[0].keys().hasOnly(['id', 'side', 'name', 'published', 'order']) &&
+            isValidString(data.padrinhos[0].id, 1, 80) &&
+            data.padrinhos[0].side in ['noiva', 'noivo'] &&
+            isValidString(data.padrinhos[0].name, 0, 120) &&
+            data.padrinhos[0].published is bool &&
+            data.padrinhos[0].order is int &&
+            data.padrinhos[0].order >= 0 &&
+            data.padrinhos[0].order <= 100
+          ))
+        ))
+        && isValidOptionalString(data, 'publicShareUrl', 200)
+        && isValidString(data.heroQuote, 2, 400)
+        && isValidOptionalString(data, 'storyIntro', 1500)
+        && isValidString(data.giftIntroMessage, 2, 500)
+        && isValidOptionalString(data, 'rsvpDeadlineIso', 40)
+        && data.rsvpMaxGuestsPerSubmission is int && data.rsvpMaxGuestsPerSubmission >= 1 && data.rsvpMaxGuestsPerSubmission <= 15
+        && data.giftReservationExpiryMinutes is int && data.giftReservationExpiryMinutes >= 5 && data.giftReservationExpiryMinutes <= 10080
+        && isValidPixSiteSettingsFields(data)
+        && (!('goalAmountCents' in data) || (data.goalAmountCents is int && data.goalAmountCents >= 0))
+        && isValidOptionalString(data, 'goalTitle', 140)
+        && isValidOptionalString(data, 'lgpdContactEmail', 160)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPixSiteSettingsFields(data) {
+      return data.pixEnabled is bool
+        && isValidOptionalString(data, 'pixKey', 140)
+        && (!('pixKeyType' in data) || data.pixKeyType in ['cpf', 'cnpj', 'email', 'phone', 'evp', 'unconfigured'])
+        && isValidOptionalString(data, 'pixBeneficiaryName', 80)
+        && isValidOptionalString(data, 'pixInstitution', 80)
+        && isValidOptionalString(data, 'pixCity', 40)
+        && data.pixProviderMode in ['demo_unconfigured', 'manual_pix', 'webhook_provider']
+        && data.giftReservationExpiryMinutes is int
+        && data.giftReservationExpiryMinutes >= 5
+        && data.giftReservationExpiryMinutes <= 10080;
+    }
+
+    function isValidPixSettingsUpdate(nextData, prevData) {
+      return nextData.diff(prevData).affectedKeys().hasOnly([
+          'pixEnabled', 'pixKey', 'pixKeyType', 'pixBeneficiaryName',
+          'pixInstitution', 'pixCity', 'pixProviderMode',
+          'giftReservationExpiryMinutes', 'updatedAt'
+        ])
+        && isValidPixSiteSettingsFields(nextData);
+    }
+
+    function isValidTimelineEvent(data) {
+      return data.keys().hasAll(['dateLabel', 'title', 'description', 'order', 'isDemoExample', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['dateLabel', 'subtitle', 'title', 'description', 'imageUrl', 'galleryUrls', 'order', 'isDemoExample', 'createdAt', 'updatedAt'])
+        && isValidString(data.dateLabel, 1, 60)
+        && isValidOptionalString(data, 'subtitle', 160)
+        && isValidString(data.title, 1, 140)
+        && isValidString(data.description, 1, 2500)
+        && isValidOptionalString(data, 'imageUrl', 600)
+        && (!('galleryUrls' in data) || (
+          data.galleryUrls is list &&
+          data.galleryUrls.size() <= 8 &&
+          (data.galleryUrls.size() == 0 || (data.galleryUrls[0] is string && data.galleryUrls[0].size() <= 600))
+        ))
+        && data.order is int && data.order >= 0 && data.order <= 1000
+        && data.isDemoExample is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGiftItem(data) {
+      return data.keys().hasAll([
+          'title', 'description', 'category', 'priceCents', 'giftType',
+          'totalQuotas', 'reservedQuotas', 'paidQuotas', 'active', 'featured',
+          'isDemoExample', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'description', 'category', 'priceCents', 'imageUrl', 'giftType',
+          'totalQuotas', 'reservedQuotas', 'paidQuotas', 'desiredUnits', 'quotasPerUnit', 'sortOrder',
+          'active', 'featured', 'isDemoExample', 'needsPhotoReview', 'photoSource', 'createdAt', 'updatedAt'
+        ])
+        && isValidString(data.title, 1, 140)
+        && isValidString(data.description, 1, 500)
+        && data.category in [
+          'Cozinha & Mesa', 'Cama, Mesa & Banho', 'Eletrodomésticos', 'Decoração & Conforto',
+          'Momentos a dois', 'Lua de mel', 'Contribuições especiais', 'Nossa casa'
+        ]
+        && data.priceCents is int && data.priceCents >= 100 && data.priceCents <= 100000000
+        && isValidOptionalString(data, 'imageUrl', 600)
+        && data.giftType in ['full', 'quota', 'symbolic']
+        && data.totalQuotas is int && data.totalQuotas >= 1 && data.totalQuotas <= 1000
+        && data.reservedQuotas is int && data.reservedQuotas >= 0 && data.reservedQuotas <= data.totalQuotas
+        && data.paidQuotas is int && data.paidQuotas >= 0 && data.paidQuotas <= data.totalQuotas
+        && (data.reservedQuotas + data.paidQuotas) <= data.totalQuotas
+        && (!('desiredUnits' in data) || (data.desiredUnits is int && data.desiredUnits >= 1 && data.desiredUnits <= 100))
+        && (!('quotasPerUnit' in data) || (data.quotasPerUnit is int && data.quotasPerUnit >= 1 && data.quotasPerUnit <= 100))
+        && (!('sortOrder' in data) || (data.sortOrder is int && data.sortOrder >= 0 && data.sortOrder <= 10000))
+        && data.active is bool
+        && data.featured is bool
+        && data.isDemoExample is bool
+        && (!('needsPhotoReview' in data) || data.needsPhotoReview is bool)
+        && isValidOptionalString(data, 'photoSource', 160)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGiftOrder(data) {
+      return data.keys().hasAll([
+          'giftTitle', 'isCustomAmount', 'quotas', 'amountCents', 'giverName',
+          'giverContact', 'status', 'paymentMethod', 'orderTokenHash', 'lgpdConsent',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'giftId', 'giftTitle', 'itemsSnapshot', 'isCustomAmount', 'quotas', 'amountCents', 'giverName',
+          'giverContact', 'messageToCouple', 'status', 'paymentMethod', 'orderTokenHash',
+          'idempotencyKey', 'mpOrderId', 'mpPaymentId', 'mpTransactionStatus', 'mpStatusDetail',
+          'mpPaymentType', 'mpCheckoutUrl',
+          'receiptProofHash', 'receiptNote', 'receiptPath', 'lgpdConsent', 'expiresAtIso',
+          'confirmedAtIso', 'adminArchived', 'adminArchivedAtIso', 'adminArchivedBy',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidOptionalString(data, 'giftId', 128)
+        && isValidString(data.giftTitle, 1, 160)
+        && (!('itemsSnapshot' in data) || (
+          data.itemsSnapshot is list &&
+          data.itemsSnapshot.size() <= 30 &&
+          (data.itemsSnapshot.size() == 0 || (
+            data.itemsSnapshot[0] is map &&
+            data.itemsSnapshot[0].keys().hasAll(['giftId', 'title', 'quotas', 'unitPriceCents', 'totalCents']) &&
+            data.itemsSnapshot[0].keys().hasOnly(['giftId', 'title', 'quotas', 'unitPriceCents', 'totalCents']) &&
+            isValidString(data.itemsSnapshot[0].giftId, 1, 128) &&
+            isValidString(data.itemsSnapshot[0].title, 1, 140) &&
+            data.itemsSnapshot[0].quotas is int && data.itemsSnapshot[0].quotas >= 1 && data.itemsSnapshot[0].quotas <= 100 &&
+            data.itemsSnapshot[0].unitPriceCents is int && data.itemsSnapshot[0].unitPriceCents >= 100 && data.itemsSnapshot[0].unitPriceCents <= 100000000 &&
+            data.itemsSnapshot[0].totalCents is int && data.itemsSnapshot[0].totalCents >= 100 && data.itemsSnapshot[0].totalCents <= 100000000
+          ))
+        ))
+        && data.isCustomAmount is bool
+        && data.quotas is int && data.quotas >= 1 && data.quotas <= 1500
+        && data.amountCents is int && data.amountCents >= 100 && data.amountCents <= 100000000
+        && isValidString(data.giverName, 2, 120)
+        && isValidString(data.giverContact, 3, 140)
+        && isValidOptionalString(data, 'messageToCouple', 800)
+        && data.status in ['reserved', 'awaiting_confirmation', 'confirmed', 'expired', 'cancelled']
+        && data.paymentMethod in ['pix_manual', 'pix_webhook', 'mercadopago_card', 'demo_preview']
+        && isValidString(data.orderTokenHash, 32, 128)
+        && isValidOptionalString(data, 'idempotencyKey', 128)
+        && isValidOptionalString(data, 'mpOrderId', 128)
+        && isValidOptionalString(data, 'mpPaymentId', 128)
+        && isValidOptionalString(data, 'mpTransactionStatus', 60)
+        && isValidOptionalString(data, 'mpStatusDetail', 80)
+        && isValidOptionalString(data, 'mpPaymentType', 60)
+        && isValidOptionalString(data, 'mpCheckoutUrl', 600)
+        && isValidOptionalString(data, 'receiptProofHash', 128)
+        && isValidOptionalString(data, 'receiptNote', 300)
+        && isValidOptionalString(data, 'receiptPath', 500)
+        && data.lgpdConsent is bool
+        && isValidOptionalString(data, 'expiresAtIso', 40)
+        && isValidOptionalString(data, 'confirmedAtIso', 40)
+        && (!('adminArchived' in data) || data.adminArchived is bool)
+        && isValidOptionalString(data, 'adminArchivedAtIso', 40)
+        && isValidOptionalString(data, 'adminArchivedBy', 200)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidRsvp(data) {
+      return data.keys().hasAll([
+          'responsibleName', 'contact', 'attending', 'attendeesCount',
+          'attendeeNames', 'status', 'editTokenHash', 'lgpdConsent', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'responsibleName', 'contact', 'attending', 'attendeesCount',
+          'attendeeNames', 'notes', 'status', 'editTokenHash', 'lgpdConsent', 'createdAt', 'updatedAt'
+        ])
+        && isValidString(data.responsibleName, 2, 120)
+        && isValidString(data.contact, 3, 140)
+        && data.attending is bool
+        && data.attendeesCount is int && data.attendeesCount >= 0 && data.attendeesCount <= 10
+        && data.attendeeNames is list && data.attendeeNames.size() <= 10
+        && (data.attendeeNames.size() == 0 || (data.attendeeNames[0] is string && data.attendeeNames[0].size() <= 120))
+        && isValidOptionalString(data, 'notes', 600)
+        && data.status in ['pending_review', 'approved', 'declined', 'needs_adjustment']
+        && isValidString(data.editTokenHash, 32, 128)
+        && data.lgpdConsent is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidRsvpRevision(data) {
+      return data.keys().hasAll([
+          'rsvpId', 'tokenHash', 'attending', 'attendeesCount', 'attendeeNames', 'reviewStatus', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'rsvpId', 'tokenHash', 'attending', 'attendeesCount', 'attendeeNames', 'notes', 'reviewStatus', 'createdAt'
+        ])
+        && isValidId(data.rsvpId)
+        && isValidString(data.tokenHash, 32, 128)
+        && data.attending is bool
+        && data.attendeesCount is int && data.attendeesCount >= 0 && data.attendeesCount <= 10
+        && data.attendeeNames is list && data.attendeeNames.size() <= 10
+        && (data.attendeeNames.size() == 0 || (data.attendeeNames[0] is string && data.attendeeNames[0].size() <= 120))
+        && isValidOptionalString(data, 'notes', 600)
+        && data.reviewStatus in ['pending', 'applied', 'rejected']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidGuestbookMessage(data) {
+      return data.keys().hasAll(['authorName', 'message', 'status', 'consentToPublish', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['authorName', 'relationship', 'message', 'status', 'consentToPublish', 'createdAt', 'updatedAt'])
+        && isValidString(data.authorName, 2, 100)
+        && isValidOptionalString(data, 'relationship', 80)
+        && isValidString(data.message, 2, 800)
+        && data.status in ['pending', 'approved', 'rejected']
+        && data.consentToPublish is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGalleryAlbum(data) {
+      return data.keys().hasAll(['title', 'allowGuestUploads', 'order', 'createdAt'])
+        && data.keys().hasOnly(['title', 'description', 'allowGuestUploads', 'order', 'createdAt'])
+        && isValidString(data.title, 1, 120)
+        && isValidOptionalString(data, 'description', 400)
+        && data.allowGuestUploads is bool
+        && data.order is int && data.order >= 0 && data.order <= 500
+        && data.createdAt is timestamp;
+    }
+
+    function isValidGalleryPhoto(data) {
+      return data.keys().hasAll(['albumId', 'imageUrl', 'uploadedBy', 'sizeBytes', 'status', 'consentToPublish', 'createdAt'])
+        && data.keys().hasOnly(['albumId', 'imageUrl', 'caption', 'uploadedBy', 'sizeBytes', 'status', 'consentToPublish', 'isPlaceholder', 'createdAt'])
+        && isValidId(data.albumId)
+        && isValidString(data.imageUrl, 5, 600)
+        && isValidOptionalString(data, 'caption', 240)
+        && isValidString(data.uploadedBy, 2, 100)
+        && data.sizeBytes is int && data.sizeBytes >= 0 && data.sizeBytes <= 5242880
+        && data.status in ['pending', 'approved', 'rejected']
+        && data.consentToPublish is bool
+        && (!('isPlaceholder' in data) || data.isPlaceholder is bool)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidCoverflowPhoto(data) {
+      return data.keys().hasAll(['imageUrl', 'order', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['imageUrl', 'caption', 'order', 'createdAt', 'updatedAt'])
+        && isValidString(data.imageUrl, 5, 600)
+        && isValidOptionalString(data, 'caption', 200)
+        && data.order is int && data.order >= 0 && data.order <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFaqItem(data) {
+      return data.keys().hasAll(['category', 'question', 'answer', 'order', 'isDemoExample', 'updatedAt'])
+        && data.keys().hasOnly(['category', 'question', 'answer', 'order', 'isDemoExample', 'updatedAt'])
+        && data.category in ['RSVP', 'Presentes', 'Horários', 'Crianças', 'Cerimônia', 'Geral']
+        && isValidString(data.question, 3, 240)
+        && isValidString(data.answer, 2, 1200)
+        && data.order is int && data.order >= 0 && data.order <= 500
+        && data.isDemoExample is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminLog(data) {
+      return data.keys().hasAll(['actorUid', 'action', 'details', 'createdAt'])
+        && data.keys().hasOnly(['actorUid', 'actorEmail', 'action', 'details', 'createdAt'])
+        && isValidId(data.actorUid)
+        && isValidOptionalString(data, 'actorEmail', 200)
+        && isValidString(data.action, 2, 120)
+        && isValidString(data.details, 1, 500)
+        && data.createdAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(adminId) && isAdmin() && isValidAdminUser(incoming()) && incoming().uid == adminId && incoming().createdAt == request.time;
+      allow update: if isValidId(adminId) && isAdmin() && isValidAdminUser(incoming()) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(adminId) && isAdmin();
+    }
+
+    match /site_settings/{settingId} {
+      allow get: if isValidId(settingId) && (settingId == 'main' || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(settingId) && isAdmin() && isValidSiteSettings(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId) && isAdmin() && incoming().updatedAt == request.time && (
+        isValidSiteSettings(incoming()) ||
+        isValidPixSettingsUpdate(incoming(), existing())
+      );
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    match /timeline_events/{eventId} {
+      allow get: if isValidId(eventId);
+      allow list: if true;
+      allow create: if isValidId(eventId) && isAdmin() && isValidTimelineEvent(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(eventId) && isAdmin() && isValidTimelineEvent(incoming()) && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isValidId(eventId) && isAdmin();
+    }
+
+    match /gifts/{giftId} {
+      allow get: if isValidId(giftId);
+      allow list: if true;
+      allow create: if isValidId(giftId) && isAdmin() && isValidGiftItem(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(giftId) && isValidGiftItem(incoming()) && (
+        (isAdmin() && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time) ||
+        (
+          existing().active == true &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['reservedQuotas', 'updatedAt']) &&
+          incoming().reservedQuotas > existing().reservedQuotas &&
+          (incoming().reservedQuotas - existing().reservedQuotas) <= 50 &&
+          (incoming().reservedQuotas + existing().paidQuotas) <= existing().totalQuotas &&
+          incoming().updatedAt == request.time
+        )
+      );
+      allow delete: if isValidId(giftId) && isAdmin();
+    }
+
+    match /gift_orders/{orderId} {
+      allow get: if isValidId(orderId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(orderId) && isValidGiftOrder(incoming()) && (
+        isAdmin() || (
+          incoming().lgpdConsent == true &&
+          !('confirmedAtIso' in incoming()) &&
+          !('mpPaymentId' in incoming()) &&
+          !('adminArchived' in incoming()) &&
+          !('adminArchivedAtIso' in incoming()) &&
+          !('adminArchivedBy' in incoming()) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          (
+            (
+              incoming().paymentMethod == 'pix_manual' &&
+              incoming().status == 'awaiting_confirmation' &&
+              !('mpOrderId' in incoming()) &&
+              !('mpTransactionStatus' in incoming()) &&
+              !('mpStatusDetail' in incoming()) &&
+              !('mpPaymentType' in incoming()) &&
+              !('mpCheckoutUrl' in incoming()) &&
+              !('receiptProofHash' in incoming()) &&
+              !('receiptNote' in incoming()) &&
+              !('receiptPath' in incoming())
+            ) || (
+              incoming().paymentMethod == 'mercadopago_card' &&
+              incoming().status in ['reserved', 'awaiting_confirmation']
+            )
+          )
+        )
+      );
+      allow update: if isValidId(orderId) && isValidGiftOrder(incoming()) && (
+        (isAdmin() && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time) ||
+        (
+          existing().status in ['reserved', 'awaiting_confirmation'] &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'receiptProofHash', 'receiptNote', 'receiptPath', 'updatedAt']) &&
+          incoming().receiptProofHash == existing().orderTokenHash &&
+          incoming().status == 'awaiting_confirmation' &&
+          incoming().updatedAt == request.time
+        ) ||
+        (
+          existing().paymentMethod == 'mercadopago_card' &&
+          existing().status in ['reserved', 'awaiting_confirmation'] &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'receiptProofHash', 'mpOrderId', 'mpCheckoutUrl', 'mpTransactionStatus', 'updatedAt']) &&
+          incoming().receiptProofHash == existing().orderTokenHash &&
+          incoming().status == 'awaiting_confirmation' &&
+          incoming().updatedAt == request.time
+        )
+      );
+      allow delete: if isValidId(orderId) && isAdmin() &&
+        existing().status != 'confirmed' &&
+        !('confirmedAtIso' in existing()) &&
+        existing().paymentMethod != 'pix_webhook';
+    }
+
+    match /rsvps/{rsvpId} {
+      allow get: if isValidId(rsvpId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(rsvpId) && isValidRsvp(incoming()) && (
+        isAdmin() || (
+          incoming().lgpdConsent == true &&
+          incoming().status == 'pending_review' &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time
+        )
+      );
+      allow update: if isValidId(rsvpId) && isAdmin() && isValidRsvp(incoming()) && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isValidId(rsvpId) && isAdmin();
+    }
+
+    match /rsvp_revisions/{revisionId} {
+      allow get: if isValidId(revisionId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(revisionId) && isValidRsvpRevision(incoming()) && (
+        incoming().reviewStatus == 'pending' &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/rsvps/$(incoming().rsvpId)) &&
+        get(/databases/$(database)/documents/rsvps/$(incoming().rsvpId)).data.editTokenHash == incoming().tokenHash
+      );
+      allow update: if isValidId(revisionId) && isAdmin() && isValidRsvpRevision(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(revisionId) && isAdmin();
+    }
+
+    match /guestbook_messages/{messageId} {
+      allow get: if isValidId(messageId) && (isAdmin() || existing().status == 'approved');
+      allow list: if isAdmin() || resource.data.status == 'approved';
+      allow create: if isValidId(messageId) && isValidGuestbookMessage(incoming()) && (
+        isAdmin() || (
+          incoming().consentToPublish == true &&
+          incoming().status == 'pending' &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time
+        )
+      );
+      allow update: if isValidId(messageId) && isAdmin() && isValidGuestbookMessage(incoming()) && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isValidId(messageId) && isAdmin();
+    }
+
+    match /gallery_albums/{albumId} {
+      allow get: if isValidId(albumId);
+      allow list: if true;
+      allow create: if isValidId(albumId) && isAdmin() && isValidGalleryAlbum(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(albumId) && isAdmin() && isValidGalleryAlbum(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(albumId) && isAdmin();
+    }
+
+    match /gallery_photos/{photoId} {
+      allow get: if isValidId(photoId) && (isAdmin() || existing().status == 'approved');
+      allow list: if isAdmin() || resource.data.status == 'approved';
+      allow create: if isValidId(photoId) && isValidGalleryPhoto(incoming()) &&
+        exists(/databases/$(database)/documents/gallery_albums/$(incoming().albumId)) && (
+        isAdmin() || (
+          incoming().consentToPublish == true &&
+          incoming().status == 'pending' &&
+          incoming().createdAt == request.time
+        )
+      );
+      allow update: if isValidId(photoId) && isAdmin() && isValidGalleryPhoto(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(photoId) && isAdmin();
+    }
+
+    match /coverflow_photos/{photoId} {
+      allow get: if isValidId(photoId);
+      allow list: if true;
+      allow create: if isValidId(photoId) && isAdmin() && isValidCoverflowPhoto(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(photoId) && isAdmin() && isValidCoverflowPhoto(incoming()) && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isValidId(photoId) && isAdmin();
+    }
+
+    match /faqs/{faqId} {
+      allow get: if isValidId(faqId);
+      allow list: if true;
+      allow create: if isValidId(faqId) && isAdmin() && isValidFaqItem(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(faqId) && isAdmin() && isValidFaqItem(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(faqId) && isAdmin();
+    }
+
+    match /admin_logs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(logId) && isAdmin() && isValidAdminLog(incoming()) && incoming().actorUid == request.auth.uid && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(logId) && isAdmin();
+    }
+  }
+}
